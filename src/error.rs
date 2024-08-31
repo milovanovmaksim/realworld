@@ -1,6 +1,9 @@
+use actix_web::http::StatusCode;
 use actix_web::HttpResponse;
+use bcrypt::BcryptError;
 use diesel::r2d2::{Error as R2D2Error, PoolError};
 use diesel::result::{DatabaseErrorKind, Error as DieselError};
+use jsonwebtoken::errors::{Error as JwtError, ErrorKind as JwtErrorKind};
 use serde_json::{json, Value as JsonValue};
 use thiserror::Error;
 
@@ -39,10 +42,25 @@ impl actix_web::error::ResponseError for AppError {
             }
         }
     }
+    fn status_code(&self) -> StatusCode {
+        match *self {
+            AppError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
+            AppError::Forbidden(_) => StatusCode::FORBIDDEN,
+            AppError::NotFound(_) => StatusCode::NOT_FOUND,
+            AppError::UnprocessableEntity(_) => StatusCode::UNPROCESSABLE_ENTITY,
+            AppError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
 }
 
 impl From<PoolError> for AppError {
     fn from(_err: PoolError) -> Self {
+        AppError::InternalServerError
+    }
+}
+
+impl From<BcryptError> for AppError {
+    fn from(_err: BcryptError) -> Self {
         AppError::InternalServerError
     }
 }
@@ -68,6 +86,21 @@ impl From<DieselError> for AppError {
                 AppError::NotFound(json!({"error": "requested record was not found"}))
             }
             _ => AppError::InternalServerError,
+        }
+    }
+}
+
+impl From<JwtError> for AppError {
+    fn from(err: JwtError) -> Self {
+        match err.kind() {
+            JwtErrorKind::InvalidToken => AppError::Unauthorized(json!(
+                {"error": "Token is invalid"}
+            )),
+            JwtErrorKind::InvalidIssuer => AppError::Unauthorized(json!(
+                {"error": "Issuer is invalid"})),
+            _ => AppError::Unauthorized(json!({
+                "error": "An issue was found with the token provided"
+            })),
         }
     }
 }

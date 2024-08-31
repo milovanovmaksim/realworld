@@ -31,6 +31,12 @@ chrono = { version = "0.4", features = ["serde"] }
 # derive(Error)
 thiserror = { version = "1.0" }
 
+# Create and decode JWTs in a strongly typed way.
+jsonwebtoken = { version = "8.3" }
+
+# Easily hash and verify passwords using bcrypt
+bcrypt = { version = "0.14.0" }
+
 # A library to generate and parse UUIDs.
 # Compatible version is here: https://github.com/diesel-rs/diesel/blob/master/diesel/Cargo.toml#L26
 # uuid = { version = "0.8", features = ["serde", "v4"] }

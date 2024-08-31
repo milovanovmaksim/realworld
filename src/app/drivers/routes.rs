@@ -1,4 +1,4 @@
-use actix_web::web::{self, get, ServiceConfig};
+use actix_web::web::{self, get, post, ServiceConfig};
 
 use crate::app;
 
@@ -11,6 +11,10 @@ pub fn api(cfg: &mut ServiceConfig) {
             )
             .service(
                 web::scope("/tags").route("", get().to(app::features::tag::controllers::index)),
-            ),
+            )
+            .service(web::scope("/users").route(
+                "/login",
+                post().to(app::features::user::controllers::signin),
+            )),
     );
 }
