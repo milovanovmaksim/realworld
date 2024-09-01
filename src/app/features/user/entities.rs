@@ -61,6 +61,20 @@ impl User {
         let token = user.generate_token()?;
         Ok((user, token))
     }
+
+    pub fn signup<'a>(
+        conn: &mut PgConnection,
+        email: &'a str,
+        username: &'a str,
+        naive_password: &'a str,
+    ) -> Result<(User, Token), AppError> {
+        let hashed_passowrd = hasher::hash_password(naive_password)?;
+        let record = SignupUser {
+            email,
+            username, 
+            password: &hashed_passowrd
+        }
+    }
 }
 
 impl User {
@@ -69,4 +83,12 @@ impl User {
         let token = token::generate(self.id, now)?;
         Ok(token)
     }
+}
+
+#[derive(Insertable, Debug, Deserialize)]
+#[diesel(table_name = users)]
+pub struct SignupUser<'a> {
+    pub email: &'a str,
+    pub username: &'a str,
+    pub password: &'a str,
 }

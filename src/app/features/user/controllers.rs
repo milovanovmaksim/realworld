@@ -10,3 +10,5 @@ pub async fn signin(state: web::Data<AppState>, form: web::Json<requests::Signin
         .user_usecase
         .signin(&form.user.email, &form.user.password)
 }
+
+pub async fn signup(state: web::Data<AppState>, from: web::Json<requests::Signup>) -> ApiResponse {}

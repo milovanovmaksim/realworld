@@ -22,8 +22,8 @@ pub struct DiContainer {
      * User
      */
     pub user_repository: UserRepositoryImpl,
-    pub user_usecase: UserUsecase,
     pub user_presenter: UserPresenterImpl,
+    pub user_usecase: UserUsecase,
 }
 
 impl DiContainer {
@@ -53,8 +53,8 @@ impl DiContainer {
 
             // User
             user_repository,
-            user_usecase,
             user_presenter,
+            user_usecase,
         }
     }
 }
