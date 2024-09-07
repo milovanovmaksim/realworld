@@ -1,6 +1,6 @@
-use crate::{app::features::user::entities::User, schema::follows};
+use crate::{app::features::user::entities::User, error::AppError, schema::follows};
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
+use diesel::{dsl::Eq, prelude::*};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -12,4 +12,56 @@ pub struct Follow {
     pub follower_id: Uuid,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+}
+
+type WithFollowee<T> = Eq<follows::followee_id, T>;
+type WithFollower<T> = Eq<follows::follower_id, T>;
+
+impl Follow {
+    pub fn with_followee(followee_id: &Uuid) -> WithFollowee<&Uuid> {
+        follows::followee_id.eq(followee_id)
+    }
+    pub fn with_follower(follower_id: &Uuid) -> WithFollower<&Uuid> {
+        follows::follower_id.eq(follower_id)
+    }
+}
+
+impl Follow {
+    pub fn create(conn: &mut PgConnection, params: &CreateFollow) -> Result<(), AppError> {
+        diesel::insert_into(follows::table)
+            .values(params)
+            .execute(conn)?;
+        Ok(())
+    }
+
+    pub fn delete(conn: &mut PgConnection, params: &DeleteFollow) -> Result<(), AppError> {
+        let t = follows::table
+            .filter(Follow::with_followee(&params.followee_id))
+            .filter(Follow::with_follower(&params.follower_id));
+        diesel::delete(t).execute(conn)?;
+        Ok(())
+    }
+
+    pub fn fetch_followee_ids_by_follower_id(
+        conn: &mut PgConnection,
+        follower_id: &Uuid,
+    ) -> Result<Vec<Uuid>, AppError> {
+        let t = follows::table
+            .filter(Follow::with_follower(follower_id))
+            .select(follows::followee_id);
+        let result = t.get_results::<Uuid>(conn)?;
+        Ok(result)
+    }
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = follows)]
+pub struct CreateFollow {
+    pub follower_id: Uuid,
+    pub followee_id: Uuid,
+}
+
+pub struct DeleteFollow {
+    pub follower_id: Uuid,
+    pub followee_id: Uuid,
 }
