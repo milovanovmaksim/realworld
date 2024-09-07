@@ -13,6 +13,8 @@ use diesel::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use super::requests::UpdateUser;
+
 type Token = String;
 type All<DB> = Select<users::table, AsSelect<User, DB>>;
 type WithEmail<T> = Eq<users::email, T>;
@@ -80,6 +82,18 @@ impl User {
         let token = user.generate_token()?;
         Ok((user, token))
     }
+
+    pub fn update(
+        conn: &mut PgConnection,
+        user_id: Uuid,
+        changeset: UpdateUser,
+    ) -> Result<Self, AppError> {
+        let target = users::table.find(user_id);
+        let user = diesel::update(target)
+            .set(changeset)
+            .get_result::<User>(conn)?;
+        Ok(user)
+    }
 }
 
 impl User {
@@ -96,4 +110,14 @@ pub struct SignupUser<'a> {
     pub email: &'a str,
     pub username: &'a str,
     pub password: &'a str,
+}
+
+#[derive(AsChangeset, Debug, Deserialize, Clone)]
+#[diesel(table_name = users)]
+pub struct UpdateUser {
+    pub email: Option<String>,
+    pub username: Option<String>,
+    pub password: Option<String>,
+    pub image: Option<String>,
+    pub bio: Option<String>,
 }
