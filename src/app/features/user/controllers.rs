@@ -33,5 +33,14 @@ pub async fn update(
     form: web::Json<requests::Update>,
 ) -> ApiResponse {
     let current_user = auth::get_current_user(&req)?;
-    todo!()
+    state.di_container.user_usecase.update_user(
+        current_user.id,
+        super::entities::UpdateUser {
+            email: form.user.email.clone(),
+            username: form.user.username.clone(),
+            password: form.user.password.clone(),
+            image: form.user.image.clone(),
+            bio: form.user.bio.clone(),
+        },
+    )
 }
