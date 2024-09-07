@@ -27,4 +27,15 @@ impl UserUsecase {
         let res = self.user_presenter.to_json(user, token);
         Ok(res)
     }
+
+    pub fn signup(
+        &self,
+        email: &str,
+        username: &str,
+        password: &str,
+    ) -> Result<HttpResponse, AppError> {
+        let (user, token) = self.user_repository.signup(email, username, password)?;
+        let res = self.user_presenter.to_json(user, token);
+        Ok(res)
+    }
 }

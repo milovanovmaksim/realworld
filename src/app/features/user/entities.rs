@@ -71,9 +71,14 @@ impl User {
         let hashed_passowrd = hasher::hash_password(naive_password)?;
         let record = SignupUser {
             email,
-            username, 
-            password: &hashed_passowrd
-        }
+            username,
+            password: &hashed_passowrd,
+        };
+        let user = diesel::insert_into(users::table)
+            .values(&record)
+            .get_result::<User>(conn)?;
+        let token = user.generate_token()?;
+        Ok((user, token))
     }
 }
 
