@@ -1,3 +1,5 @@
+use crate::app::features::follow::entities::Follow;
+use crate::app::features::profile::entities::Profile;
 use crate::utils::{hasher, token};
 use crate::{error::AppError, schema::users};
 use chrono::prelude::*;
@@ -13,11 +15,12 @@ use diesel::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::requests::UpdateUser;
-
 type Token = String;
+
 type All<DB> = Select<users::table, AsSelect<User, DB>>;
+type WithUsername<T> = Eq<users::username, T>;
 type WithEmail<T> = Eq<users::email, T>;
+type ByUsername<DB, T> = Filter<All<DB>, WithUsername<T>>;
 type ByEmail<DB, T> = Filter<All<DB>, WithEmail<T>>;
 
 #[derive(Identifiable, Queryable, Selectable, Serialize, Deserialize, Debug, Clone)]
@@ -30,6 +33,7 @@ pub struct User {
     pub bio: Option<String>,
     pub image: Option<String>,
     pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
 
 impl User {
@@ -41,6 +45,16 @@ impl User {
     }
     fn with_email(email: &str) -> WithEmail<&str> {
         users::email.eq(email)
+    }
+    pub fn with_username(username: &str) -> WithUsername<&str> {
+        users::username.eq(username)
+    }
+
+    pub fn by_username<DB>(username: &str) -> ByUsername<DB, &str>
+    where
+        DB: Backend,
+    {
+        Self::all().filter(Self::with_username(username))
     }
 
     fn by_email<DB>(email: &str) -> ByEmail<DB, &str>
@@ -94,6 +108,22 @@ impl User {
             .get_result::<User>(conn)?;
         Ok(user)
     }
+
+    pub fn find_by_username(conn: &mut PgConnection, username: &str) -> Result<Self, AppError> {
+        let t = Self::by_username(username).limit(1);
+        let user = t.first::<User>(conn)?;
+        Ok(user)
+    }
+
+    pub fn is_following(&self, conn: &mut PgConnection, followee_id: &Uuid) -> bool {
+        use crate::schema::follows;
+        let t = follows::table
+            .filter(Follow::with_followee(followee_id))
+            .filter(Follow::with_follower(&self.id));
+
+        let follow = t.get_result::<Follow>(conn);
+        follow.is_ok()
+    }
 }
 
 impl User {
@@ -101,6 +131,21 @@ impl User {
         let now = Utc::now().timestamp_nanos_opt().unwrap() / 1_000_000_000;
         let token = token::generate(self.id, now)?;
         Ok(token)
+    }
+
+    pub fn fetch_profile(
+        &self,
+        conn: &mut PgConnection,
+        followee_id: &Uuid,
+    ) -> Result<Profile, AppError> {
+        let is_following = &self.is_following(conn, followee_id);
+        let profile = Profile {
+            username: self.username.to_owned(),
+            bio: self.bio.to_owned(),
+            image: self.image.to_owned(),
+            following: is_following.to_owned(),
+        };
+        Ok(profile)
     }
 }
 
