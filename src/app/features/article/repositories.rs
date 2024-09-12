@@ -1,6 +1,8 @@
 use crate::{
     app::features::{
-        favorite::entities::FavoriteInfo, profile::entities::Profile, tag::entities::Tag,
+        favorite::entities::{Favorite, FavoriteInfo},
+        profile::entities::Profile,
+        tag::entities::Tag,
         user::entities::User,
     },
     error::AppError,
@@ -55,6 +57,11 @@ impl ArticleRepository for ArticleRepositoryImpl {
                 let ids = Article::fetch_ids_by_author_name(conn, author_name)?;
                 query = query.filter(articles::id.eq_any(ids))
             }
+
+            if let Some(username) = &params.favorited {
+                let ids = Favorite::fetch_favorited_artcile_ids_by_username(conn, username)?;
+                query = query.filter(articles::id.eq_any(ids));
+            }
             Ok(query)
         };
         let articles_count = query()?
@@ -85,8 +92,28 @@ impl ArticleRepository for ArticleRepositoryImpl {
                     .collect();
                 list?
             };
+            article_and_user_list
+                .into_iter()
+                .zip(favorites_count_list)
+                .map(|((article, user), favorites_count)| {
+                    (
+                        article,
+                        Profile {
+                            username: user.username,
+                            bio: user.bio,
+                            image: user.image,
+                            following: false, // NOTE: because not authz
+                        },
+                        FavoriteInfo {
+                            is_favorited: false,
+                            favorites_count,
+                        },
+                    )
+                })
+                .zip(tags_list)
+                .collect::<Vec<_>>()
         };
-        todo!()
+        Ok((result, articles_count))
     }
 }
 type ArticlesListInner = (Article, Profile, FavoriteInfo);

@@ -8,6 +8,7 @@ use diesel::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::error::AppError;
 use crate::{
     app::features::{article::entities::Article, user::entities::User},
     schema::favorites,
@@ -34,6 +35,21 @@ impl Favorite {
     }
 }
 
+impl Favorite {
+    pub fn fetch_favorited_artcile_ids_by_username(
+        conn: &mut PgConnection,
+        username: &str,
+    ) -> Result<Vec<Uuid>, AppError> {
+        use crate::schema::users;
+
+        let t = favorites::table
+            .inner_join(users::table)
+            .filter(User::with_username(username))
+            .select(favorites::article_id);
+        let ids = t.load::<Uuid>(conn)?;
+        Ok(ids)
+    }
+}
 #[derive(Clone)]
 pub struct FavoriteInfo {
     pub is_favorited: bool,

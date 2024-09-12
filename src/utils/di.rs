@@ -1,6 +1,10 @@
 use std::sync::Arc;
 
 use crate::app::features::{
+    article::{
+        presenters::ArticlePresenterImpl, repositories::ArticleRepositoryImpl,
+        usecases::ArticleUsecase,
+    },
     profile::{
         presenters::ProfilePresenterImpl, repositories::ProfileRepositoryImpl,
         usecases::ProfileUsecase,
@@ -34,6 +38,11 @@ pub struct DiContainer {
     pub profile_repository: ProfileRepositoryImpl,
     pub profile_presenter: ProfilePresenterImpl,
     pub profile_usecase: ProfileUsecase,
+
+    // Article
+    pub article_repository: ArticleRepositoryImpl,
+    pub article_presenter: ArticlePresenterImpl,
+    pub article_usecase: ArticleUsecase,
 }
 
 impl DiContainer {
@@ -42,11 +51,13 @@ impl DiContainer {
         let tag_repository = TagRepositoryImpl::new(pool.clone());
         let user_repository = UserRepositoryImpl::new(pool.clone());
         let profile_repository = ProfileRepositoryImpl::new(pool.clone());
+        let article_repository = ArticleRepositoryImpl::new(pool.clone());
 
         // Presenter
         let tag_presenter = TagPresenterImpl::new();
         let user_presenter = UserPresenterImpl::new();
         let profile_presenter = ProfilePresenterImpl::new();
+        let article_presenter = ArticlePresenterImpl::new();
 
         // Usecase
         let tag_usecase = TagUsecase::new(
@@ -61,6 +72,10 @@ impl DiContainer {
             Arc::new(profile_repository.clone()),
             Arc::new(user_repository.clone()),
             Arc::new(profile_presenter.clone()),
+        );
+        let article_usecase = ArticleUsecase::new(
+            Arc::new(article_repository.clone()),
+            Arc::new(article_presenter.clone()),
         );
         Self {
             // Tag
@@ -77,6 +92,11 @@ impl DiContainer {
             profile_repository,
             profile_presenter,
             profile_usecase,
+
+            // Artcile
+            article_repository,
+            article_presenter,
+            article_usecase,
         }
     }
 }
