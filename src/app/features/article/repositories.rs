@@ -1,5 +1,3 @@
-use diesel::QueryDsl;
-
 use crate::app::features::article::entities::Article;
 use crate::app::features::favorite::entities::{Favorite, FavoriteInfo};
 use crate::app::features::follow::entities::Follow;
@@ -11,6 +9,7 @@ use crate::schema::articles::dsl::*;
 use crate::schema::{articles, follows, users};
 use crate::utils::db::DbPool;
 use diesel::prelude::*;
+use diesel::QueryDsl;
 
 pub trait ArticleRepository: Send + Sync + 'static {
     fn fetch_articles(
@@ -56,7 +55,7 @@ impl ArticleRepository for ArticleRepositoryImpl {
         use diesel::prelude::*;
 
         let conn = &mut self.pool.get()?;
-        let query =  {
+        let query = {
             let mut query = articles::table.inner_join(users::table).into_boxed();
 
             if let Some(tag_name) = &params.tag {
@@ -78,7 +77,7 @@ impl ArticleRepository for ArticleRepositoryImpl {
         let articles_count = query
             .select(diesel::dsl::count(articles::id))
             .first::<i64>(conn)?;
-        let query =  {
+        let query = {
             let mut query = articles::table.inner_join(users::table).into_boxed();
 
             if let Some(tag_name) = &params.tag {
@@ -98,10 +97,11 @@ impl ArticleRepository for ArticleRepositoryImpl {
             query
         };
         let result = {
-            let article_and_user_list = query
-                .offset(params.offset)
-                .limit(params.limit)
-                .load::<(Article, User)>(conn)?;
+            let article_and_user_list =
+                query
+                    .offset(params.offset)
+                    .limit(params.limit)
+                    .load::<(Article, User)>(conn)?;
             let tags_list = {
                 let article_list = article_and_user_list
                     .clone()
