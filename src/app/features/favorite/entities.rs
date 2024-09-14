@@ -30,6 +30,10 @@ pub struct Favorite {
 }
 
 impl Favorite {
+    pub fn with_user_id(user_id: &Uuid) -> WithUserId<&Uuid> {
+        favorites::user_id.eq_all(user_id)
+    }
+
     pub fn with_article_id(article_id: &Uuid) -> WithArticleId<&Uuid> {
         favorites::article_id.eq_all(article_id)
     }

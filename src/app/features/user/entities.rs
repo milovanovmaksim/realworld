@@ -1,5 +1,7 @@
+use crate::app::features::favorite::entities::Favorite;
 use crate::app::features::follow::entities::Follow;
 use crate::app::features::profile::entities::Profile;
+use crate::schema::favorites;
 use crate::utils::{hasher, token};
 use crate::{error::AppError, schema::users};
 use chrono::prelude::*;
@@ -146,6 +148,17 @@ impl User {
             following: is_following.to_owned(),
         };
         Ok(profile)
+    }
+
+    pub fn fetch_favorited_article_ids(
+        &self,
+        conn: &mut PgConnection,
+    ) -> Result<Vec<Uuid>, AppError> {
+        let t = favorites::table
+            .filter(Favorite::with_user_id(&self.id))
+            .select(favorites::article_id);
+        let favorited_article_ids = t.get_results::<Uuid>(conn)?;
+        Ok(favorited_article_ids)
     }
 }
 

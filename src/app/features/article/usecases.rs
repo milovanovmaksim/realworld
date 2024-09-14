@@ -6,7 +6,9 @@ use crate::error::AppError;
 
 use super::{
     presenters::ArticlePresenter,
-    repositories::{ArticleRepository, FetchArticlesRepositoryInput},
+    repositories::{
+        ArticleRepository, FetchArticlesRepositoryInput, FetchFollowingArticlesRepositoryInput,
+    },
 };
 
 #[derive(Clone)]
@@ -39,6 +41,23 @@ impl ArticleUsecase {
                     offset: params.offset,
                     limit: params.limit,
                 })?;
+        let res = self.article_presenter.to_multi_json(list, count);
+        Ok(res)
+    }
+
+    pub fn fetch_following_articles(
+        &self,
+        user: User,
+        offset: i64,
+        limit: i64,
+    ) -> Result<HttpResponse, AppError> {
+        let (list, count) = self.article_repository.fetch_following_articles(
+            &FetchFollowingArticlesRepositoryInput {
+                current_user: user,
+                offset,
+                limit,
+            },
+        )?;
         let res = self.article_presenter.to_multi_json(list, count);
         Ok(res)
     }
