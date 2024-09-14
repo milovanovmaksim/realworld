@@ -1,6 +1,5 @@
-use actix_web::web::{self, delete, get, post, put, ServiceConfig};
-
 use crate::app;
+use actix_web::web::{self, delete, get, post, put, ServiceConfig};
 
 pub fn api(cfg: &mut ServiceConfig) {
     cfg.service(
