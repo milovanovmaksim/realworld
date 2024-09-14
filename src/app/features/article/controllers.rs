@@ -54,3 +54,9 @@ pub async fn feed(
         .article_usecase
         .fetch_following_articles(current_user, offset, limit)
 }
+
+type ArticleTitleSlug = String;
+
+pub fn show(state: web::Data<AppState>, path: web::Path<ArticleTitleSlug>) -> ApiResponse {
+    todo!()
+}
