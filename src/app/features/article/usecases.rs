@@ -1,15 +1,12 @@
-use std::sync::Arc;
-
-use actix_web::HttpResponse;
-
-use crate::error::AppError;
-
 use super::{
     presenters::ArticlePresenter,
     repositories::{
         ArticleRepository, FetchArticlesRepositoryInput, FetchFollowingArticlesRepositoryInput,
     },
 };
+use crate::{app::features::user::entities::User, error::AppError};
+use actix_web::HttpResponse;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct ArticleUsecase {

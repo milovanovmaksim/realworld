@@ -66,7 +66,7 @@ impl ArticleRepository for ArticleRepositoryImpl {
 
             if let Some(author_name) = &params.author {
                 let ids = Article::fetch_ids_by_author_name(conn, author_name)?;
-                query = query.filter(articles::id.eq_any(ids))
+                query = query.filter(articles::id.eq_any(ids));
             }
 
             if let Some(username) = &params.favorited {

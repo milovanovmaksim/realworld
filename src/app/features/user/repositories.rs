@@ -90,7 +90,7 @@ impl UserRepository for UserRepositoryImpl {
         target_username: &str,
     ) -> Result<Profile, AppError> {
         let conn = &mut self.pool.get()?;
-        let t = User::by_username(target_username)?;
+        let t = User::by_username(target_username);
         let followee = { t.first::<User>(conn)? };
         Follow::delete(
             conn,
