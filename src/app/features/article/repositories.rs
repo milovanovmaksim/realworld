@@ -56,7 +56,7 @@ impl ArticleRepository for ArticleRepositoryImpl {
         use diesel::prelude::*;
 
         let conn = &mut self.pool.get()?;
-        let query = || {
+        let query =  {
             let mut query = articles::table.inner_join(users::table).into_boxed();
 
             if let Some(tag_name) = &params.tag {
@@ -73,13 +73,32 @@ impl ArticleRepository for ArticleRepositoryImpl {
                 let ids = Favorite::fetch_favorited_artcile_ids_by_username(conn, username)?;
                 query = query.filter(articles::id.eq_any(ids));
             }
-            Ok(query)
+            query
         };
-        let articles_count = query()?
+        let articles_count = query
             .select(diesel::dsl::count(articles::id))
             .first::<i64>(conn)?;
+        let query =  {
+            let mut query = articles::table.inner_join(users::table).into_boxed();
+
+            if let Some(tag_name) = &params.tag {
+                let ids = Tag::fetch_article_ids_by_name(conn, tag_name)?;
+                query = query.filter(articles::id.eq_any(ids));
+            }
+
+            if let Some(author_name) = &params.author {
+                let ids = Article::fetch_ids_by_author_name(conn, author_name)?;
+                query = query.filter(articles::id.eq_any(ids));
+            }
+
+            if let Some(username) = &params.favorited {
+                let ids = Favorite::fetch_favorited_artcile_ids_by_username(conn, username)?;
+                query = query.filter(articles::id.eq_any(ids));
+            }
+            query
+        };
         let result = {
-            let article_and_user_list = query()?
+            let article_and_user_list = query
                 .offset(params.offset)
                 .limit(params.limit)
                 .load::<(Article, User)>(conn)?;
