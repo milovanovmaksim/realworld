@@ -1,6 +1,6 @@
 use std::env;
 
-use jsonwebtoken::{errors::Error, DecodingKey, EncodingKey, Header, TokenData, Validation};
+use jsonwebtoken::{errors::Error, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

@@ -1,3 +1,4 @@
+use super::entities::{UpdateUser, User};
 use crate::{
     app::features::{
         follow::entities::{CreateFollow, DeleteFollow, Follow},
@@ -6,9 +7,8 @@ use crate::{
     error::AppError,
     utils::db::DbPool,
 };
+use diesel::prelude::*;
 use uuid::Uuid;
-
-use super::entities::{UpdateUser, User};
 
 type Token = String;
 

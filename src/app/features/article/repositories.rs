@@ -177,7 +177,7 @@ impl ArticleRepository for ArticleRepositoryImpl {
                     .collect();
                 list?
             };
-            let favorited_articles_ids = params.current_user.fetch_favorited_articile_ids(conn)?;
+            let favorited_articles_ids = params.current_user.fetch_favorited_article_ids(conn)?;
             let is_favorited_by_me = |article: &Article| {
                 favorited_articles_ids
                     .iter()

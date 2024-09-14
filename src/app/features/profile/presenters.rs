@@ -1,11 +1,14 @@
 use actix_web::HttpResponse;
+use serde::Serialize;
 
 use super::entities::Profile as ProfileEntity;
 
+#[derive(Serialize)]
 pub struct ProfileResponse {
     pub profile: ProfileContent,
 }
 
+#[derive(Serialize)]
 pub struct ProfileContent {
     pub username: String,
     pub bio: Option<String>,
