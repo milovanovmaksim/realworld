@@ -21,20 +21,10 @@ pub trait ArticleRepository: Send + Sync + 'static {
         &self,
         params: &FetchFollowingArticlesRepositoryInput,
     ) -> Result<(ArticlesList, ArticlesCount), AppError>;
-}
-
-pub struct FetchArticlesRepositoryInput {
-    pub tag: Option<String>,
-    pub author: Option<String>,
-    pub favorited: Option<String>,
-    pub offset: i64,
-    pub limit: i64,
-}
-
-pub struct FetchFollowingArticlesRepositoryInput {
-    pub current_user: User,
-    pub offset: i64,
-    pub limit: i64,
+    fn fetch_article_by_slug(
+        &self,
+        article_title_slug: String,
+    ) -> Result<FetchArticleBySlugOutput, AppError>;
 }
 
 #[derive(Clone)]
@@ -231,8 +221,33 @@ impl ArticleRepository for ArticleRepositoryImpl {
             .first::<i64>(conn)?;
         Ok((articles_list, articles_count))
     }
+
+    fn fetch_article_by_slug(
+        &self,
+        article_title_slug: String,
+    ) -> Result<FetchArticleBySlugOutput, AppError> {
+        let conn = &mut self.pool.get()?;
+        let (article, author) = Article::fetch_by_slug_with_author(conn, &article_title_slug)?;
+        todo!()
+    }
 }
 
 type ArticlesListInner = (Article, Profile, FavoriteInfo);
 pub type ArticlesList = Vec<(ArticlesListInner, Vec<Tag>)>;
 type ArticlesCount = i64;
+
+pub type FetchArticleBySlugOutput = (Article, Profile, FavoriteInfo, Vec<Tag>);
+
+pub struct FetchArticlesRepositoryInput {
+    pub tag: Option<String>,
+    pub author: Option<String>,
+    pub favorited: Option<String>,
+    pub offset: i64,
+    pub limit: i64,
+}
+
+pub struct FetchFollowingArticlesRepositoryInput {
+    pub current_user: User,
+    pub offset: i64,
+    pub limit: i64,
+}
