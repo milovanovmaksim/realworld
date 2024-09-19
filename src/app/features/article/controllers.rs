@@ -57,6 +57,7 @@ pub async fn feed(
 
 type ArticleTitleSlug = String;
 
-pub fn show(state: web::Data<AppState>, path: web::Path<ArticleTitleSlug>) -> ApiResponse {
-    todo!()
+pub async fn show(state: web::Data<AppState>, path: web::Path<ArticleTitleSlug>) -> ApiResponse {
+    let article_title_slug =path.into_inner();
+    state.di_container.article_usecase.fetch_article_by_slug(article_title_slug)
 }

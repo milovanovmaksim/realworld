@@ -12,7 +12,7 @@ use uuid::Uuid;
 use crate::{
     app::features::{favorite::entities::Favorite, user::entities::User},
     error::AppError,
-    schema::articles,
+    schema::{articles, favorites},
 };
 
 type WithAuthorId<T> = Eq<articles::author_id, T>;
@@ -69,5 +69,31 @@ impl Article {
             .select(diesel::dsl::count(favorites::created_at));
         let favorites_count = t.first::<i64>(conn)?;
         Ok(favorites_count)
+    }
+
+    pub fn fetch_by_slug_with_author(
+        conn: &mut PgConnection,
+        slug: &str,
+    ) -> Result<(Self, User), AppError> {
+        use crate::schema::users;
+
+        let t = articles::table
+            .inner_join(users::table)
+            .filter(Self::with_slug(slug));
+        let result = t.get_result::<(Self, User)>(conn)?;
+        Ok(result)
+    }
+
+    pub fn is_favorited_by_user_id(
+        &self,
+        conn: &mut PgConnection,
+        user_id: &Uuid,
+    ) -> Result<bool, AppError> {
+        let t = favorites::table
+            .select(diesel::dsl::count(favorites::id))
+            .filter(Favorite::with_article_id(&self.id))
+            .filter(Favorite::with_user_id(user_id));
+        let count = t.first::<i64>(conn)?;
+        Ok(count >= 1)
     }
 }

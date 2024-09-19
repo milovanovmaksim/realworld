@@ -43,6 +43,10 @@ pub fn api(cfg: &mut ServiceConfig) {
                 web::scope("/articles")
                     .route("/feed", get().to(app::features::article::controllers::feed))
                     .route("", get().to(app::features::article::controllers::index)),
+            )
+            .service(
+                web::scope("/{article_title_slug}")
+                    .route("", get().to(app::features::article::controllers::show)),
             ),
     );
 }

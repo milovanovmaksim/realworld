@@ -42,6 +42,17 @@ impl ArticleUsecase {
         Ok(res)
     }
 
+    pub fn fetch_article_by_slug(
+        &self,
+        article_title_slug: String,
+    ) -> Result<HttpResponse, AppError> {
+        let result = self
+            .article_repository
+            .fetch_article_by_slug(article_title_slug)?;
+        let res = self.article_presenter.to_single_json(result);
+        Ok(res)
+    }
+
     pub fn fetch_following_articles(
         &self,
         user: User,

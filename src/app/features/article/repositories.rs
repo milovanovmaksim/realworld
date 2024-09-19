@@ -228,7 +228,17 @@ impl ArticleRepository for ArticleRepositoryImpl {
     ) -> Result<FetchArticleBySlugOutput, AppError> {
         let conn = &mut self.pool.get()?;
         let (article, author) = Article::fetch_by_slug_with_author(conn, &article_title_slug)?;
-        todo!()
+        let profile = author.fetch_profile(conn, &author.id)?;
+        let tag_list = Tag::belonging_to(&article).load::<Tag>(conn)?;
+        let favorite_info = {
+            let is_favorited = article.is_favorited_by_user_id(conn, &author.id)?;
+            let favorites_count = article.fetch_favorites_count(conn)?;
+            FavoriteInfo {
+                is_favorited,
+                favorites_count,
+            }
+        };
+        Ok((article, profile, favorite_info, tag_list))
     }
 }
 
