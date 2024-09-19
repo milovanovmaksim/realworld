@@ -48,6 +48,12 @@ impl Article {
 }
 
 impl Article {
+    pub fn create(conn: &mut PgConnection, record: &CreateArticle) -> Result<Self, AppError> {
+        let article = diesel::insert_into(articles::table)
+            .values(record)
+            .get_result::<Article>(conn)?;
+        Ok(article)
+    }
     pub fn fetch_ids_by_author_name(
         conn: &mut PgConnection,
         name: &str,
@@ -59,16 +65,6 @@ impl Article {
             .select(articles::id);
         let ids = t.load::<Uuid>(conn)?;
         Ok(ids)
-    }
-
-    pub fn fetch_favorites_count(&self, conn: &mut PgConnection) -> Result<i64, AppError> {
-        use crate::schema::favorites;
-
-        let t = favorites::table
-            .filter(Favorite::with_article_id(&self.id))
-            .select(diesel::dsl::count(favorites::created_at));
-        let favorites_count = t.first::<i64>(conn)?;
-        Ok(favorites_count)
     }
 
     pub fn fetch_by_slug_with_author(
@@ -83,7 +79,9 @@ impl Article {
         let result = t.get_result::<(Self, User)>(conn)?;
         Ok(result)
     }
+}
 
+impl Article {
     pub fn is_favorited_by_user_id(
         &self,
         conn: &mut PgConnection,
@@ -96,4 +94,24 @@ impl Article {
         let count = t.first::<i64>(conn)?;
         Ok(count >= 1)
     }
+
+    pub fn fetch_favorites_count(&self, conn: &mut PgConnection) -> Result<i64, AppError> {
+        use crate::schema::favorites;
+
+        let t = favorites::table
+            .filter(Favorite::with_article_id(&self.id))
+            .select(diesel::dsl::count(favorites::created_at));
+        let favorites_count = t.first::<i64>(conn)?;
+        Ok(favorites_count)
+    }
+}
+
+#[derive(Insertable, Clone)]
+#[diesel(table_name = articles)]
+pub struct CreateArticle {
+    pub author_id: Uuid,
+    pub slug: String,
+    pub title: String,
+    pub description: String,
+    pub body: String,
 }

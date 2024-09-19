@@ -2,11 +2,11 @@ use actix_web::{web, HttpRequest};
 use serde::Deserialize;
 
 use crate::{
-    app::drivers::middlewares::{auth, state::AppState},
+    app::{drivers::middlewares::{auth, state::AppState}},
     utils::api::ApiResponse,
 };
 
-use super::usecases::FetchArticlesUsecaseInput;
+use super::{requests, usecases::FetchArticlesUsecaseInput};
 
 #[derive(Deserialize)]
 pub struct ArticlesListQueryParameter {
@@ -60,4 +60,16 @@ type ArticleTitleSlug = String;
 pub async fn show(state: web::Data<AppState>, path: web::Path<ArticleTitleSlug>) -> ApiResponse {
     let article_title_slug =path.into_inner();
     state.di_container.article_usecase.fetch_article_by_slug(article_title_slug)
+}
+
+
+pub async fn create(state: web::Data<AppState>, req: HttpRequest, form: web::Json<requests::CreateArticleRequest>) -> ApiResponse {
+    let current_user = auth::get_current_user(&req)?;
+    state.di_container
+        .article_usecase
+        .create_article()
+
+
+    todo!()
+    
 }

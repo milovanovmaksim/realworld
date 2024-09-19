@@ -1,8 +1,8 @@
-use crate::app::features::article::entities::Article;
+use crate::app::features::article::entities::{Article, CreateArticle};
 use crate::app::features::favorite::entities::{Favorite, FavoriteInfo};
 use crate::app::features::follow::entities::Follow;
 use crate::app::features::profile::entities::Profile;
-use crate::app::features::tag::entities::Tag;
+use crate::app::features::tag::entities::{CreateTag, Tag};
 use crate::app::features::user::entities::User;
 use crate::error::AppError;
 use crate::schema::articles::dsl::*;
@@ -10,6 +10,7 @@ use crate::schema::{articles, follows, users};
 use crate::utils::db::DbPool;
 use diesel::prelude::*;
 use diesel::QueryDsl;
+use uuid::Uuid;
 
 pub trait ArticleRepository: Send + Sync + 'static {
     fn fetch_articles(
@@ -25,6 +26,11 @@ pub trait ArticleRepository: Send + Sync + 'static {
         &self,
         article_title_slug: String,
     ) -> Result<FetchArticleBySlugOutput, AppError>;
+
+    fn create_article(
+        &self,
+        params: CreateArticleRepositoryInput,
+    ) -> Result<(Article, Profile, FavoriteInfo, Vec<Tag>), AppError>;
 }
 
 #[derive(Clone)]
@@ -34,6 +40,24 @@ pub struct ArticleRepositoryImpl {
 impl ArticleRepositoryImpl {
     pub fn new(pool: DbPool) -> Self {
         Self { pool }
+    }
+
+    fn create_tag_list(
+        conn: &mut PgConnection,
+        tag_name_list: Option<Vec<String>>,
+        article_id: &Uuid,
+    ) -> Result<Vec<Tag>, AppError> {
+        let list = tag_name_list
+            .as_ref()
+            .map(|tag_name_list| {
+                let records = tag_name_list
+                    .iter()
+                    .map(|name| CreateTag { name, article_id })
+                    .collect();
+                Tag::create_list(conn, records)
+            })
+            .unwrap_or_else(|| Ok(vec![]));
+        list
     }
 }
 impl ArticleRepository for ArticleRepositoryImpl {
@@ -240,6 +264,36 @@ impl ArticleRepository for ArticleRepositoryImpl {
         };
         Ok((article, profile, favorite_info, tag_list))
     }
+
+    fn create_article(
+        &self,
+        params: CreateArticleRepositoryInput,
+    ) -> Result<(Article, Profile, FavoriteInfo, Vec<Tag>), AppError> {
+        let conn = &mut self.pool.get()?;
+        let article = Article::create(
+            conn,
+            &CreateArticle {
+                author_id: params.current_user.id,
+                slug: params.slug.clone(),
+                title: params.title.clone(),
+                description: params.description.clone(),
+                body: params.body.clone(),
+            },
+        )?;
+        let tag_list = Self::create_tag_list(conn, params.tag_name_list, &article.id)?;
+        let profile = params
+            .current_user
+            .fetch_profile(conn, &article.author_id)?;
+        let favorite_info = {
+            let is_favorited = article.is_favorited_by_user_id(conn, &params.current_user.id)?;
+            let favorites_count = article.fetch_favorites_count(conn)?;
+            FavoriteInfo {
+                is_favorited,
+                favorites_count,
+            }
+        };
+        Ok((article, profile, favorite_info, tag_list))
+    }
 }
 
 type ArticlesListInner = (Article, Profile, FavoriteInfo);
@@ -260,4 +314,13 @@ pub struct FetchFollowingArticlesRepositoryInput {
     pub current_user: User,
     pub offset: i64,
     pub limit: i64,
+}
+
+pub struct CreateArticleRepositoryInput {
+    pub slug: String,
+    pub title: String,
+    pub description: String,
+    pub body: String,
+    pub tag_name_list: Option<Vec<String>>,
+    pub current_user: User,
 }
