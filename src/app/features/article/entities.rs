@@ -13,6 +13,7 @@ use crate::{
     app::features::{favorite::entities::Favorite, user::entities::User},
     error::AppError,
     schema::{articles, favorites},
+    utils::converter,
 };
 
 type WithAuthorId<T> = Eq<articles::author_id, T>;
@@ -67,6 +68,19 @@ impl Article {
         Ok(ids)
     }
 
+    pub fn update(
+        conn: &mut PgConnection,
+        article_title_slug: &str,
+        author_id: &Uuid,
+        record: &UpdateArticle,
+    ) -> Result<Self, AppError> {
+        let t = articles::table
+            .filter(Self::with_slug(article_title_slug))
+            .filter(Self::with_author_id(author_id));
+        let article = diesel::update(t).set(record).get_result::<Article>(conn)?;
+        Ok(article)
+    }
+
     pub fn fetch_by_slug_with_author(
         conn: &mut PgConnection,
         slug: &str,
@@ -78,6 +92,10 @@ impl Article {
             .filter(Self::with_slug(slug));
         let result = t.get_result::<(Self, User)>(conn)?;
         Ok(result)
+    }
+
+    pub fn convert_title_to_slug(title: &str) -> String {
+        converter::to_kebab(title)
     }
 }
 
@@ -114,4 +132,13 @@ pub struct CreateArticle {
     pub title: String,
     pub description: String,
     pub body: String,
+}
+
+#[derive(AsChangeset)]
+#[diesel(table_name = articles)]
+pub struct UpdateArticle {
+    pub slug: Option<String>,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub body: Option<String>,
 }

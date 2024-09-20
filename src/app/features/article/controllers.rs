@@ -2,11 +2,11 @@ use actix_web::{web, HttpRequest};
 use serde::Deserialize;
 
 use crate::{
-    app::{drivers::middlewares::{auth, state::AppState}},
+    app::drivers::middlewares::{auth, state::AppState},
     utils::api::ApiResponse,
 };
 
-use super::{requests, usecases::FetchArticlesUsecaseInput};
+use super::{requests, usecases::{CreateArticleUsecaseInput, FetchArticlesUsecaseInput, UpdateArticleUsecaseInput}};
 
 #[derive(Deserialize)]
 pub struct ArticlesListQueryParameter {
@@ -67,9 +67,36 @@ pub async fn create(state: web::Data<AppState>, req: HttpRequest, form: web::Jso
     let current_user = auth::get_current_user(&req)?;
     state.di_container
         .article_usecase
-        .create_article()
+        .create_article(
+            CreateArticleUsecaseInput {
+                title: form.article.title.clone(),
+                description: form.article.description.clone(),
+                body: form.article.body.clone(),
+                tag_name_list: form.article.tag_list.to_owned(),
+                current_user
+        })
+}
 
 
-    todo!()
-    
+pub async fn update(
+    state: web::Data<AppState>,
+    req: HttpRequest,
+    path: web::Path<ArticleTitleSlug>,
+    form: web::Json<requests::UpdateArticleRequest>,
+) -> ApiResponse {
+    let current_user = auth::get_current_user(&req)?;
+    let article_title_slug = path.into_inner();
+    let title = form.article.title.clone();
+    let description = form.article.description.clone();
+    let body = form.article.body.clone();
+    state
+        .di_container
+        .article_usecase
+        .update_article(UpdateArticleUsecaseInput {
+            current_user,
+            article_title_slug,
+            title,
+            description,
+            body,
+        })
 }

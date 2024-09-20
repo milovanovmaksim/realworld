@@ -12,6 +12,8 @@ use diesel::prelude::*;
 use diesel::QueryDsl;
 use uuid::Uuid;
 
+use super::entities::UpdateArticle;
+
 pub trait ArticleRepository: Send + Sync + 'static {
     fn fetch_articles(
         &self,
@@ -30,6 +32,10 @@ pub trait ArticleRepository: Send + Sync + 'static {
     fn create_article(
         &self,
         params: CreateArticleRepositoryInput,
+    ) -> Result<(Article, Profile, FavoriteInfo, Vec<Tag>), AppError>;
+    fn update_article(
+        &self,
+        input: UpdateArticleRepositoryInput,
     ) -> Result<(Article, Profile, FavoriteInfo, Vec<Tag>), AppError>;
 }
 
@@ -294,6 +300,37 @@ impl ArticleRepository for ArticleRepositoryImpl {
         };
         Ok((article, profile, favorite_info, tag_list))
     }
+
+    fn update_article(
+        &self,
+        input: UpdateArticleRepositoryInput,
+    ) -> Result<(Article, Profile, FavoriteInfo, Vec<Tag>), AppError> {
+        let conn = &mut self.pool.get()?;
+        let article = Article::update(
+            conn,
+            &input.article_title_slug,
+            &input.current_user.id,
+            &UpdateArticle {
+                slug: input.slug.to_owned(),
+                title: input.title.to_owned(),
+                description: input.description.to_owned(),
+                body: input.body.to_owned(),
+            },
+        )?;
+        let tag_list = Tag::fetch_by_article_id(conn, &article.id)?;
+        let profile = input
+            .current_user
+            .fetch_profile(conn, &input.current_user.id)?;
+        let favorite_info = {
+            let is_favorited = article.is_favorited_by_user_id(conn, &input.current_user.id)?;
+            let favorites_count = article.fetch_favorites_count(conn)?;
+            FavoriteInfo {
+                is_favorited,
+                favorites_count,
+            }
+        };
+        Ok((article, profile, favorite_info, tag_list))
+    }
 }
 
 type ArticlesListInner = (Article, Profile, FavoriteInfo);
@@ -323,4 +360,13 @@ pub struct CreateArticleRepositoryInput {
     pub body: String,
     pub tag_name_list: Option<Vec<String>>,
     pub current_user: User,
+}
+
+pub struct UpdateArticleRepositoryInput {
+    pub current_user: User,
+    pub article_title_slug: String,
+    pub slug: Option<String>,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub body: Option<String>,
 }

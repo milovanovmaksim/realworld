@@ -42,11 +42,13 @@ pub fn api(cfg: &mut ServiceConfig) {
             .service(
                 web::scope("/articles")
                     .route("/feed", get().to(app::features::article::controllers::feed))
-                    .route("", get().to(app::features::article::controllers::index)),
+                    .route("", get().to(app::features::article::controllers::index))
+                    .route("", post().to(app::features::article::controllers::create)),
             )
             .service(
                 web::scope("/{article_title_slug}")
-                    .route("", get().to(app::features::article::controllers::show)),
+                    .route("", get().to(app::features::article::controllers::show))
+                    .route("", put().to(app::features::article::controllers::update)),
             ),
     );
 }

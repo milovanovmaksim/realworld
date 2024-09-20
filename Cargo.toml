@@ -31,6 +31,9 @@ chrono = { version = "0.4", features = ["serde"] }
 # derive(Error)
 thiserror = { version = "1.0" }
 
+# Convert strings into any case
+convert_case = { version = "0.6.0" }
+
 # Create and decode JWTs in a strongly typed way.
 jsonwebtoken = { version = "8.3" }
 

@@ -1,7 +1,9 @@
 use super::{
+    entities::Article,
     presenters::ArticlePresenter,
     repositories::{
-        ArticleRepository, FetchArticlesRepositoryInput, FetchFollowingArticlesRepositoryInput,
+        ArticleRepository, CreateArticleRepositoryInput, FetchArticlesRepositoryInput,
+        FetchFollowingArticlesRepositoryInput, UpdateArticleRepositoryInput,
     },
 };
 use crate::{app::features::user::entities::User, error::AppError};
@@ -69,6 +71,47 @@ impl ArticleUsecase {
         let res = self.article_presenter.to_multi_json(list, count);
         Ok(res)
     }
+
+    pub fn create_article(
+        &self,
+        params: CreateArticleUsecaseInput,
+    ) -> Result<HttpResponse, AppError> {
+        let slug = Article::convert_title_to_slug(&params.title);
+        let result = self
+            .article_repository
+            .create_article(CreateArticleRepositoryInput {
+                body: params.body,
+                current_user: params.current_user,
+                description: params.description,
+                tag_name_list: params.tag_name_list,
+                title: params.title,
+                slug,
+            })?;
+        let res = self.article_presenter.to_single_json(result);
+        Ok(res)
+    }
+
+    pub fn update_article(
+        &self,
+        input: UpdateArticleUsecaseInput,
+    ) -> Result<HttpResponse, AppError> {
+        let slug = input
+            .title
+            .as_ref()
+            .map(|title| Article::convert_title_to_slug(title));
+        let result = self
+            .article_repository
+            .update_article(UpdateArticleRepositoryInput {
+                current_user: input.current_user,
+                article_title_slug: input.article_title_slug,
+                slug,
+                title: input.title,
+                description: input.description,
+                body: input.body,
+            })?;
+        let res = self.article_presenter.to_single_json(result);
+        Ok(res)
+    }
 }
 
 pub struct FetchArticlesUsecaseInput {
@@ -77,4 +120,20 @@ pub struct FetchArticlesUsecaseInput {
     pub favorited: Option<String>,
     pub offset: i64,
     pub limit: i64,
+}
+
+pub struct CreateArticleUsecaseInput {
+    pub title: String,
+    pub description: String,
+    pub body: String,
+    pub tag_name_list: Option<Vec<String>>,
+    pub current_user: User,
+}
+
+pub struct UpdateArticleUsecaseInput {
+    pub current_user: User,
+    pub article_title_slug: String,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub body: Option<String>,
 }
