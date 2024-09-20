@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 pub trait ArticlePresenter: Send + Sync + 'static {
     fn to_single_json(&self, item: (Article, Profile, FavoriteInfo, Vec<Tag>)) -> HttpResponse;
     fn to_multi_json(&self, list: ArticlesList, count: i64) -> HttpResponse;
+    fn to_http_res(&self) -> HttpResponse;
 }
 
 #[derive(Clone)]
@@ -30,6 +31,9 @@ impl ArticlePresenter for ArticlePresenterImpl {
     fn to_multi_json(&self, list: ArticlesList, count: i64) -> HttpResponse {
         let res = MultipleArticlesResponse::from((list, count));
         HttpResponse::Ok().json(res)
+    }
+    fn to_http_res(&self) -> HttpResponse {
+        HttpResponse::Ok().json(())
     }
 }
 

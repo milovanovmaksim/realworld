@@ -94,6 +94,14 @@ impl Article {
         Ok(result)
     }
 
+    pub fn delete(conn: &mut PgConnection, params: &DeleteArticle) -> Result<(), AppError> {
+        let t = articles::table
+            .filter(Self::with_slug(&params.slug))
+            .filter(Self::with_author_id(&params.author_id));
+        diesel::delete(t).execute(conn)?;
+        Ok(())
+    }
+
     pub fn convert_title_to_slug(title: &str) -> String {
         converter::to_kebab(title)
     }
@@ -141,4 +149,9 @@ pub struct UpdateArticle {
     pub title: Option<String>,
     pub description: Option<String>,
     pub body: Option<String>,
+}
+
+pub struct DeleteArticle {
+    pub slug: String,
+    pub author_id: Uuid,
 }

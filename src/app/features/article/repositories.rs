@@ -12,7 +12,7 @@ use diesel::prelude::*;
 use diesel::QueryDsl;
 use uuid::Uuid;
 
-use super::entities::UpdateArticle;
+use super::entities::{DeleteArticle, UpdateArticle};
 
 pub trait ArticleRepository: Send + Sync + 'static {
     fn fetch_articles(
@@ -37,6 +37,8 @@ pub trait ArticleRepository: Send + Sync + 'static {
         &self,
         input: UpdateArticleRepositoryInput,
     ) -> Result<(Article, Profile, FavoriteInfo, Vec<Tag>), AppError>;
+
+    fn delete_article(&self, input: DeleteArticleRepositoryInput) -> Result<(), AppError>;
 }
 
 #[derive(Clone)]
@@ -331,6 +333,17 @@ impl ArticleRepository for ArticleRepositoryImpl {
         };
         Ok((article, profile, favorite_info, tag_list))
     }
+
+    fn delete_article(&self, input: DeleteArticleRepositoryInput) -> Result<(), AppError> {
+        let conn = &mut self.pool.get()?;
+        Article::delete(
+            conn,
+            &DeleteArticle {
+                slug: input.slug,
+                author_id: input.author_id,
+            },
+        )
+    }
 }
 
 type ArticlesListInner = (Article, Profile, FavoriteInfo);
@@ -369,4 +382,9 @@ pub struct UpdateArticleRepositoryInput {
     pub title: Option<String>,
     pub description: Option<String>,
     pub body: Option<String>,
+}
+
+pub struct DeleteArticleRepositoryInput {
+    pub slug: String,
+    pub author_id: Uuid,
 }

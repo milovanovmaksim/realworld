@@ -40,6 +40,13 @@ impl Favorite {
 }
 
 impl Favorite {
+    pub fn create(conn: &mut PgConnection, record: &CreateFavorite) -> Result<usize, AppError> {
+        let item = diesel::insert_into(favorites::table)
+            .values(record)
+            .execute(conn)?;
+        Ok(item)
+    }
+
     pub fn fetch_favorited_artcile_ids_by_username(
         conn: &mut PgConnection,
         username: &str,
@@ -54,8 +61,16 @@ impl Favorite {
         Ok(ids)
     }
 }
+
 #[derive(Clone)]
 pub struct FavoriteInfo {
     pub is_favorited: bool,
     pub favorites_count: i64,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = favorites)]
+pub struct CreateFavorite {
+    pub user_id: Uuid,
+    pub article_id: Uuid,
 }

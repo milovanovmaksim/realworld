@@ -100,3 +100,10 @@ pub async fn update(
             body,
         })
 }
+
+
+pub async fn delete(state: web::Data<AppState>, req: HttpRequest, path: web::Path<ArticleTitleSlug>) -> ApiResponse {
+    let current_user = auth::get_current_user(&req)?;
+
+    todo!()
+}

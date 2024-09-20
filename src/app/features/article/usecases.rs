@@ -2,13 +2,15 @@ use super::{
     entities::Article,
     presenters::ArticlePresenter,
     repositories::{
-        ArticleRepository, CreateArticleRepositoryInput, FetchArticlesRepositoryInput,
-        FetchFollowingArticlesRepositoryInput, UpdateArticleRepositoryInput,
+        ArticleRepository, CreateArticleRepositoryInput, DeleteArticleRepositoryInput,
+        FetchArticlesRepositoryInput, FetchFollowingArticlesRepositoryInput,
+        UpdateArticleRepositoryInput,
     },
 };
 use crate::{app::features::user::entities::User, error::AppError};
 use actix_web::HttpResponse;
 use std::sync::Arc;
+use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct ArticleUsecase {
@@ -112,6 +114,19 @@ impl ArticleUsecase {
         let res = self.article_presenter.to_single_json(result);
         Ok(res)
     }
+
+    pub fn delete_article(
+        &self,
+        input: DeleteArticleUsecaseInput,
+    ) -> Result<HttpResponse, AppError> {
+        self.article_repository
+            .delete_article(DeleteArticleRepositoryInput {
+                slug: input.slug,
+                author_id: input.author_id,
+            })?;
+        let res = self.article_presenter.to_http_res();
+        Ok(res)
+    }
 }
 
 pub struct FetchArticlesUsecaseInput {
@@ -136,4 +151,9 @@ pub struct UpdateArticleUsecaseInput {
     pub title: Option<String>,
     pub description: Option<String>,
     pub body: Option<String>,
+}
+
+pub struct DeleteArticleUsecaseInput {
+    pub slug: String,
+    pub author_id: Uuid,
 }
