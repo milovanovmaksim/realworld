@@ -12,7 +12,7 @@ use uuid::Uuid;
 use crate::{
     app::features::{favorite::entities::Favorite, user::entities::User},
     error::AppError,
-    schema::{articles, favorites},
+    schema::{articles, favorites, users},
     utils::converter,
 };
 
@@ -115,6 +115,14 @@ impl Article {
 
     pub fn convert_title_to_slug(title: &str) -> String {
         converter::to_kebab(title)
+    }
+
+    pub fn find_with_author(conn: &mut PgConnection, id: &Uuid) -> Result<(Self, User), AppError> {
+        let t = articles::table
+            .inner_join(users::table)
+            .filter(Self::with_id(id));
+        let result = t.get_result::<(Article, User)>(conn)?;
+        Ok(result)
     }
 }
 

@@ -14,6 +14,7 @@ pub trait FavoriteRepository: Send + Sync + 'static {
         -> Result<Article, AppError>;
 }
 
+#[derive(Clone)]
 pub struct FavoriteRepositoryImpl {
     pool: DbPool,
 }

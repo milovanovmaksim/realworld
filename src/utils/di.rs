@@ -5,6 +5,10 @@ use crate::app::features::{
         presenters::ArticlePresenterImpl, repositories::ArticleRepositoryImpl,
         usecases::ArticleUsecase,
     },
+    favorite::{
+        presentres::FavoritePresenterImpl, repository::FavoriteRepositoryImpl,
+        usecases::FavoriteUsecase,
+    },
     profile::{
         presenters::ProfilePresenterImpl, repositories::ProfileRepositoryImpl,
         usecases::ProfileUsecase,
@@ -43,6 +47,11 @@ pub struct DiContainer {
     pub article_repository: ArticleRepositoryImpl,
     pub article_presenter: ArticlePresenterImpl,
     pub article_usecase: ArticleUsecase,
+
+    // Favorite
+    pub favorite_repository: FavoriteRepositoryImpl,
+    pub favorite_presenter: FavoritePresenterImpl,
+    pub favorite_usecase: FavoriteUsecase,
 }
 
 impl DiContainer {
@@ -52,12 +61,14 @@ impl DiContainer {
         let user_repository = UserRepositoryImpl::new(pool.clone());
         let profile_repository = ProfileRepositoryImpl::new(pool.clone());
         let article_repository = ArticleRepositoryImpl::new(pool.clone());
+        let favorite_repository = FavoriteRepositoryImpl::new(pool.clone());
 
         // Presenter
         let tag_presenter = TagPresenterImpl::new();
         let user_presenter = UserPresenterImpl::new();
         let profile_presenter = ProfilePresenterImpl::new();
         let article_presenter = ArticlePresenterImpl::new();
+        let favorite_presenter = FavoritePresenterImpl::new();
 
         // Usecase
         let tag_usecase = TagUsecase::new(
@@ -76,6 +87,12 @@ impl DiContainer {
         let article_usecase = ArticleUsecase::new(
             Arc::new(article_repository.clone()),
             Arc::new(article_presenter.clone()),
+        );
+
+        let favorite_usecase = FavoriteUsecase::new(
+            Arc::new(favorite_repository.clone()),
+            Arc::new(favorite_presenter.clone()),
+            Arc::new(article_repository.clone()),
         );
         Self {
             // Tag
@@ -97,6 +114,11 @@ impl DiContainer {
             article_repository,
             article_presenter,
             article_usecase,
+
+            // Favorite
+            favorite_repository,
+            favorite_presenter,
+            favorite_usecase,
         }
     }
 }

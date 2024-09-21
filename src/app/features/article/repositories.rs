@@ -39,6 +39,10 @@ pub trait ArticleRepository: Send + Sync + 'static {
     ) -> Result<(Article, Profile, FavoriteInfo, Vec<Tag>), AppError>;
 
     fn delete_article(&self, input: DeleteArticleRepositoryInput) -> Result<(), AppError>;
+    fn fetch_article(
+        &self,
+        params: &FetchArticleRepositoryInput,
+    ) -> Result<(Article, Profile, FavoriteInfo, Vec<Tag>), AppError>;
 }
 
 #[derive(Clone)]
@@ -344,6 +348,25 @@ impl ArticleRepository for ArticleRepositoryImpl {
             },
         )
     }
+
+    fn fetch_article(
+        &self,
+        params: &FetchArticleRepositoryInput,
+    ) -> Result<(Article, Profile, FavoriteInfo, Vec<Tag>), AppError> {
+        let conn = &mut self.pool.get()?;
+        let (article, author) = Article::find_with_author(conn, &params.article_id)?;
+        let profile = params.current_user.fetch_profile(conn, &author.id)?;
+        let favorite_info = {
+            let is_favorited = article.is_favorited_by_user_id(conn, &params.current_user.id)?;
+            let favorites_count = article.fetch_favorites_count(conn)?;
+            FavoriteInfo {
+                is_favorited,
+                favorites_count,
+            }
+        };
+        let tag_list = { Tag::belonging_to(&article).load::<Tag>(conn)? };
+        Ok((article, profile, favorite_info, tag_list))
+    }
 }
 
 type ArticlesListInner = (Article, Profile, FavoriteInfo);
@@ -387,4 +410,9 @@ pub struct UpdateArticleRepositoryInput {
 pub struct DeleteArticleRepositoryInput {
     pub slug: String,
     pub author_id: Uuid,
+}
+
+pub struct FetchArticleRepositoryInput {
+    pub article_id: Uuid,
+    pub current_user: User,
 }
