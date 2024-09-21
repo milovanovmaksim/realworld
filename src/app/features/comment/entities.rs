@@ -1,7 +1,7 @@
 use crate::app::features::{article::entities::Article, user::entities::User};
 use crate::error::AppError;
 use crate::schema::comments;
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveDateTime};
 use diesel::dsl::Eq;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -21,8 +21,8 @@ pub struct Comment {
     pub article_id: Uuid,
     pub author_id: Uuid,
     pub body: String,
-    pub created_at: NaiveDate,
-    pub updated_at: NaiveDate,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
 
 type WithId<T> = Eq<comments::id, T>;
