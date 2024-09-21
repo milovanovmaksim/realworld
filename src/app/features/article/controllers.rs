@@ -6,7 +6,13 @@ use crate::{
     utils::api::ApiResponse,
 };
 
-use super::{requests, usecases::{CreateArticleUsecaseInput, FetchArticlesUsecaseInput, UpdateArticleUsecaseInput}};
+use super::{
+    requests,
+    usecases::{
+        CreateArticleUsecaseInput, DeleteArticleUsecaseInput, FetchArticlesUsecaseInput,
+        UpdateArticleUsecaseInput,
+    },
+};
 
 #[derive(Deserialize)]
 pub struct ArticlesListQueryParameter {
@@ -58,25 +64,30 @@ pub async fn feed(
 type ArticleTitleSlug = String;
 
 pub async fn show(state: web::Data<AppState>, path: web::Path<ArticleTitleSlug>) -> ApiResponse {
-    let article_title_slug =path.into_inner();
-    state.di_container.article_usecase.fetch_article_by_slug(article_title_slug)
+    let article_title_slug = path.into_inner();
+    state
+        .di_container
+        .article_usecase
+        .fetch_article_by_slug(article_title_slug)
 }
 
-
-pub async fn create(state: web::Data<AppState>, req: HttpRequest, form: web::Json<requests::CreateArticleRequest>) -> ApiResponse {
+pub async fn create(
+    state: web::Data<AppState>,
+    req: HttpRequest,
+    form: web::Json<requests::CreateArticleRequest>,
+) -> ApiResponse {
     let current_user = auth::get_current_user(&req)?;
-    state.di_container
+    state
+        .di_container
         .article_usecase
-        .create_article(
-            CreateArticleUsecaseInput {
-                title: form.article.title.clone(),
-                description: form.article.description.clone(),
-                body: form.article.body.clone(),
-                tag_name_list: form.article.tag_list.to_owned(),
-                current_user
+        .create_article(CreateArticleUsecaseInput {
+            title: form.article.title.clone(),
+            description: form.article.description.clone(),
+            body: form.article.body.clone(),
+            tag_name_list: form.article.tag_list.to_owned(),
+            current_user,
         })
 }
-
 
 pub async fn update(
     state: web::Data<AppState>,
@@ -101,9 +112,18 @@ pub async fn update(
         })
 }
 
-
-pub async fn delete(state: web::Data<AppState>, req: HttpRequest, path: web::Path<ArticleTitleSlug>) -> ApiResponse {
+pub async fn delete(
+    state: web::Data<AppState>,
+    req: HttpRequest,
+    path: web::Path<ArticleTitleSlug>,
+) -> ApiResponse {
     let current_user = auth::get_current_user(&req)?;
-
-    todo!()
+    let article_title_slug = path.into_inner();
+    state
+        .di_container
+        .article_usecase
+        .delete_article(DeleteArticleUsecaseInput {
+            author_id: current_user.id,
+            slug: article_title_slug,
+        })
 }
