@@ -19,7 +19,7 @@ diesel::table! {
         article_id -> Uuid,
         author_id -> Uuid,
         body -> Text,
-        create_at -> Timestamp,
+        created_at -> Timestamp,
         updated_at -> Timestamp,
     }
 }
@@ -73,11 +73,4 @@ diesel::joinable!(favorites -> articles (article_id));
 diesel::joinable!(favorites -> users (user_id));
 diesel::joinable!(tags -> articles (article_id));
 
-diesel::allow_tables_to_appear_in_same_query!(
-    articles,
-    comments,
-    favorites,
-    follows,
-    tags,
-    users,
-);
+diesel::allow_tables_to_appear_in_same_query!(articles, comments, favorites, follows, tags, users,);
