@@ -50,7 +50,7 @@ pub fn api(cfg: &mut ServiceConfig) {
                             .route("", put().to(app::features::article::controllers::update))
                             .route("", delete().to(app::features::article::controllers::delete))
                             .service(web::scope("/favorite")
-                                .route("", post().to()),
+                                .route("", post().to(app::features::favorite::controllers::favorite)),
                                 .route()
                             ),
                     ),
