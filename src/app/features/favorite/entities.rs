@@ -60,6 +60,20 @@ impl Favorite {
         let ids = t.load::<Uuid>(conn)?;
         Ok(ids)
     }
+
+    pub fn delete(
+        conn: &mut PgConnection,
+        DeleteFavorite {
+            user_id,
+            article_id,
+        }: &DeleteFavorite,
+    ) -> Result<usize, AppError> {
+        let t = favorites::table
+            .filter(Self::with_user_id(user_id))
+            .filter(Self::with_article_id(article_id));
+        let item = diesel::delete(t).execute(conn)?;
+        Ok(item)
+    }
 }
 
 #[derive(Clone)]
@@ -71,6 +85,12 @@ pub struct FavoriteInfo {
 #[derive(Insertable)]
 #[diesel(table_name = favorites)]
 pub struct CreateFavorite {
+    pub user_id: Uuid,
+    pub article_id: Uuid,
+}
+
+#[derive(Clone)]
+pub struct DeleteFavorite {
     pub user_id: Uuid,
     pub article_id: Uuid,
 }
