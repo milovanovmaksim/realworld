@@ -81,6 +81,17 @@ impl Article {
         Ok(article)
     }
 
+    pub fn fetch_by_slug_and_author_id(
+        conn: &mut PgConnection,
+        params: &FetchBySlugAndAuthorId,
+    ) -> Result<Self, AppError> {
+        let t = articles::table
+            .filter(Self::with_slug(&params.slug))
+            .filter(Self::with_author_id(&params.author_id));
+        let item = t.first::<Self>(conn)?;
+        Ok(item)
+    }
+
     pub fn fetch_by_slug_with_author(
         conn: &mut PgConnection,
         slug: &str,
@@ -152,6 +163,11 @@ pub struct UpdateArticle {
 }
 
 pub struct DeleteArticle {
+    pub slug: String,
+    pub author_id: Uuid,
+}
+
+pub struct FetchBySlugAndAuthorId {
     pub slug: String,
     pub author_id: Uuid,
 }
