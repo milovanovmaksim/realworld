@@ -5,6 +5,10 @@ use crate::app::features::{
         presenters::ArticlePresenterImpl, repositories::ArticleRepositoryImpl,
         usecases::ArticleUsecase,
     },
+    comment::{
+        presenters::CommentPresenterImpl, repositories::CommentRepositoryImpl,
+        usecases::CommentUsecase,
+    },
     favorite::{
         presentres::FavoritePresenterImpl, repository::FavoriteRepositoryImpl,
         usecases::FavoriteUsecase,
@@ -52,6 +56,11 @@ pub struct DiContainer {
     pub favorite_repository: FavoriteRepositoryImpl,
     pub favorite_presenter: FavoritePresenterImpl,
     pub favorite_usecase: FavoriteUsecase,
+
+    // Comment
+    pub comment_repository: CommentRepositoryImpl,
+    pub comment_presenter: CommentPresenterImpl,
+    pub comment_usecase: CommentUsecase,
 }
 
 impl DiContainer {
@@ -62,6 +71,7 @@ impl DiContainer {
         let profile_repository = ProfileRepositoryImpl::new(pool.clone());
         let article_repository = ArticleRepositoryImpl::new(pool.clone());
         let favorite_repository = FavoriteRepositoryImpl::new(pool.clone());
+        let comment_repository = CommentRepositoryImpl::new(pool.clone());
 
         // Presenter
         let tag_presenter = TagPresenterImpl::new();
@@ -69,6 +79,7 @@ impl DiContainer {
         let profile_presenter = ProfilePresenterImpl::new();
         let article_presenter = ArticlePresenterImpl::new();
         let favorite_presenter = FavoritePresenterImpl::new();
+        let comment_presenter = CommentPresenterImpl::new();
 
         // Usecase
         let tag_usecase = TagUsecase::new(
@@ -94,6 +105,11 @@ impl DiContainer {
             Arc::new(favorite_presenter.clone()),
             Arc::new(article_repository.clone()),
         );
+        let comment_usecase = CommentUsecase::new(
+            Arc::new(comment_repository.clone()),
+            Arc::new(comment_presenter.clone()),
+        );
+
         Self {
             // Tag
             tag_repository,
@@ -119,6 +135,11 @@ impl DiContainer {
             favorite_repository,
             favorite_presenter,
             favorite_usecase,
+
+            // Comment
+            comment_repository,
+            comment_presenter,
+            comment_usecase,
         }
     }
 }
