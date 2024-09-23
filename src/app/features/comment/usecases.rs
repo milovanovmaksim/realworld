@@ -32,4 +32,8 @@ impl CommentUsecase {
         let res = self.comment_presenter.to_single_json(result);
         Ok(res)
     }
+
+    pub fn fetch_comments(&self, user: &Option<User>) -> Result<HttpResponse, AppError> {
+        let result = self.comment_repository.fetch_comments(user)?;
+    }
 }
