@@ -2,6 +2,7 @@ use super::{presenters::CommentPresenter, repositories::CommentRepository};
 use crate::{app::features::user::entities::User, error::AppError};
 use actix_web::HttpResponse;
 use std::sync::Arc;
+use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct CommentUsecase {
@@ -36,6 +37,19 @@ impl CommentUsecase {
     pub fn fetch_comments(&self, user: &Option<User>) -> Result<HttpResponse, AppError> {
         let result = self.comment_repository.fetch_comments(user)?;
         let res = self.comment_presenter.to_multi_json(result);
+        Ok(res)
+    }
+
+    pub fn delete_comment(
+        &self,
+        article_title_slug: &str,
+        comment_id: Uuid,
+        author_id: Uuid,
+    ) -> Result<HttpResponse, AppError> {
+        let _ = self
+            .comment_repository
+            .delete_comment(article_title_slug, comment_id, author_id);
+        let res = self.comment_presenter.to_http_res();
         Ok(res)
     }
 }

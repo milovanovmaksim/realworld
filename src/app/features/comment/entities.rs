@@ -1,7 +1,7 @@
 use crate::app::features::{article::entities::Article, user::entities::User};
 use crate::error::AppError;
-use crate::schema::comments;
-use chrono::{NaiveDate, NaiveDateTime};
+use crate::schema::{articles, comments};
+use chrono::NaiveDateTime;
 use diesel::dsl::Eq;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -43,6 +43,22 @@ impl Comment {
             .values(record)
             .get_result::<Comment>(conn)?;
         Ok(new_comment)
+    }
+
+    pub fn delete(
+        conn: &mut PgConnection,
+        (comment_id, author_id, slug): (&Uuid, &Uuid, &str),
+    ) -> Result<(), AppError> {
+        let subquery = articles::table
+            .filter(articles::slug.eq(slug))
+            .filter(articles::author_id.eq(author_id))
+            .select(articles::id);
+        let query = comments::table
+            .filter(Self::with_id(comment_id))
+            .filter(Self::with_author(author_id))
+            .filter(comments::article_id.eq_any(subquery));
+        diesel::delete(query).execute(conn)?;
+        Ok(())
     }
 }
 

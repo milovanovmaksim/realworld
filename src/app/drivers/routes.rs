@@ -67,9 +67,10 @@ pub fn api(cfg: &mut ServiceConfig) {
                                         "",
                                         post().to(app::features::comment::controllers::create),
                                     )
+                                    .route("", get().to(app::features::comment::controllers::index))
                                     .route(
-                                        "",
-                                        get().to(app::features::comment::controllers::index),
+                                        "/{comment_id}",
+                                        delete().to(app::features::comment::controllers::delete),
                                     ),
                             ),
                     ),

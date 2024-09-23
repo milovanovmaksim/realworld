@@ -80,6 +80,7 @@ pub struct InnerAuthor {
 pub trait CommentPresenter: Send + Sync + 'static {
     fn to_single_json(&self, item: (Comment, Profile)) -> HttpResponse;
     fn to_multi_json(&self, list: Vec<(Comment, Profile)>) -> HttpResponse;
+    fn to_http_res(&self) -> HttpResponse;
 }
 
 #[derive(Clone)]
@@ -100,5 +101,9 @@ impl CommentPresenter for CommentPresenterImpl {
     fn to_multi_json(&self, list: Vec<(Comment, Profile)>) -> HttpResponse {
         let res = MultipleCommentResponse::from(list);
         HttpResponse::Ok().json(res)
+    }
+
+    fn to_http_res(&self) -> HttpResponse {
+        HttpResponse::Ok().json("OK")
     }
 }

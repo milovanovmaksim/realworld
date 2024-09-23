@@ -6,6 +6,7 @@ use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use jsonwebtoken::errors::{Error as JwtError, ErrorKind as JwtErrorKind};
 use serde_json::{json, Value as JsonValue};
 use thiserror::Error;
+use uuid::Error as UuidError;
 
 #[derive(Error, Debug)]
 pub enum AppError {
@@ -102,5 +103,11 @@ impl From<JwtError> for AppError {
                 "error": "An issue was found with the token provided"
             })),
         }
+    }
+}
+
+impl From<UuidError> for AppError {
+    fn from(_err: UuidError) -> Self {
+        AppError::NotFound(json!({"error":"Uuid is invalid."}))
     }
 }

@@ -2,12 +2,13 @@ use actix_web::{web, HttpRequest};
 
 use crate::{
     app::drivers::middlewares::{auth, state::AppState},
-    utils::api::ApiResponse,
+    utils::{api::ApiResponse, uuid},
 };
 
 use super::request;
 
 type ArticleIdSlug = String;
+type CommentIdSlug = String;
 
 pub async fn create(
     state: web::Data<AppState>,
@@ -30,4 +31,19 @@ pub async fn index(state: web::Data<AppState>, req: HttpRequest) -> ApiResponse 
         .di_container
         .comment_usecase
         .fetch_comments(&current_user)
+}
+
+pub async fn delete(
+    state: web::Data<AppState>,
+    req: HttpRequest,
+    path: web::Path<(ArticleIdSlug, CommentIdSlug)>,
+) -> ApiResponse {
+    let current_user = auth::get_current_user(&req)?;
+    let (article_title_slug, comment_id) = path.into_inner();
+    let comment_id = uuid::parse(&comment_id)?;
+    state.di_container.comment_usecase.delete_comment(
+        &article_title_slug,
+        comment_id,
+        current_user.id,
+    )
 }

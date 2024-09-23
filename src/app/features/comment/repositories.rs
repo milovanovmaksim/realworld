@@ -10,6 +10,7 @@ use crate::{
 };
 use diesel::prelude::*;
 use diesel::QueryDsl;
+use uuid::Uuid;
 
 use super::entities::{Comment, CreateComment};
 
@@ -24,6 +25,12 @@ pub trait CommentRepository: Send + Sync + 'static {
         &self,
         current_user: &Option<User>,
     ) -> Result<Vec<(Comment, Profile)>, AppError>;
+    fn delete_comment(
+        &self,
+        article_title_slug: &str,
+        comment_id: Uuid,
+        author_id: Uuid,
+    ) -> Result<(), AppError>;
 }
 
 #[derive(Clone)]
@@ -80,5 +87,16 @@ impl CommentRepository for CommentRepositoryImpl {
             })
             .collect::<Vec<(Comment, Profile)>>();
         Ok(comments)
+    }
+
+    fn delete_comment(
+        &self,
+        article_title_slug: &str,
+        comment_id: Uuid,
+        author_id: Uuid,
+    ) -> Result<(), AppError> {
+        let conn = &mut self.pool.get()?;
+        let _ = Comment::delete(conn, (&comment_id, &author_id, article_title_slug));
+        Ok(())
     }
 }
