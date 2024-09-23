@@ -35,15 +35,30 @@ impl From<(Comment, Profile)> for SingleCommentResponse {
     }
 }
 
-
 impl From<Vec<(Comment, Profile)>> for MltipleCommentResponse {
     fn from(list: Vec<(Comment, Profile)>) -> Self {
-        Self { comments:  }
-        
+        Self {
+            comments: list
+                .into_iter()
+                .map(|item| {
+                    let (comment, profile) = item;
+                    InnerComment {
+                        id: comment.id,
+                        created_at: Iso8601(comment.created_at),
+                        updated_at: Iso8601(comment.updated_at),
+                        body: comment.body,
+                        author: InnerAuthor {
+                            username: profile.username,
+                            bio: profile.bio,
+                            image: profile.image,
+                            following: profile.following,
+                        },
+                    }
+                })
+                .collect(),
+        }
     }
 }
-
-
 
 #[derive(Serialize, Deserialize)]
 pub struct InnerComment {
