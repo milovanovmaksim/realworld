@@ -23,3 +23,11 @@ pub async fn create(
         .comment_usecase
         .create_comment(body, article_title_slug, current_user)
 }
+
+pub async fn index(state: web::Data<AppState>, req: HttpRequest) -> ApiResponse {
+    let current_user = auth::get_current_user(&req).ok();
+    state
+        .di_container
+        .comment_usecase
+        .fetch_comments(&current_user)
+}

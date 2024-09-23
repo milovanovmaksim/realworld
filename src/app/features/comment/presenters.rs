@@ -12,7 +12,7 @@ pub struct SingleCommentResponse {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct MltipleCommentResponse {
+pub struct MultipleCommentResponse {
     pub comments: Vec<InnerComment>,
 }
 
@@ -35,7 +35,7 @@ impl From<(Comment, Profile)> for SingleCommentResponse {
     }
 }
 
-impl From<Vec<(Comment, Profile)>> for MltipleCommentResponse {
+impl From<Vec<(Comment, Profile)>> for MultipleCommentResponse {
     fn from(list: Vec<(Comment, Profile)>) -> Self {
         Self {
             comments: list
@@ -79,6 +79,7 @@ pub struct InnerAuthor {
 
 pub trait CommentPresenter: Send + Sync + 'static {
     fn to_single_json(&self, item: (Comment, Profile)) -> HttpResponse;
+    fn to_multi_json(&self, list: Vec<(Comment, Profile)>) -> HttpResponse;
 }
 
 #[derive(Clone)]
@@ -93,6 +94,11 @@ impl CommentPresenterImpl {
 impl CommentPresenter for CommentPresenterImpl {
     fn to_single_json(&self, item: (Comment, Profile)) -> HttpResponse {
         let res = SingleCommentResponse::from(item);
+        HttpResponse::Ok().json(res)
+    }
+
+    fn to_multi_json(&self, list: Vec<(Comment, Profile)>) -> HttpResponse {
+        let res = MultipleCommentResponse::from(list);
         HttpResponse::Ok().json(res)
     }
 }

@@ -60,6 +60,17 @@ pub fn api(cfg: &mut ServiceConfig) {
                                         delete()
                                             .to(app::features::favorite::controllers::unfavorite),
                                     ),
+                            )
+                            .service(
+                                web::scope("comment")
+                                    .route(
+                                        "",
+                                        post().to(app::features::comment::controllers::create),
+                                    )
+                                    .route(
+                                        "",
+                                        get().to(app::features::comment::controllers::index),
+                                    ),
                             ),
                     ),
             ),
