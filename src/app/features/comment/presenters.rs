@@ -11,6 +11,11 @@ pub struct SingleCommentResponse {
     pub comment: InnerComment,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct MltipleCommentResponse {
+    pub comments: Vec<InnerComment>,
+}
+
 impl From<(Comment, Profile)> for SingleCommentResponse {
     fn from((comment, profile): (Comment, Profile)) -> Self {
         Self {
@@ -29,6 +34,16 @@ impl From<(Comment, Profile)> for SingleCommentResponse {
         }
     }
 }
+
+
+impl From<Vec<(Comment, Profile)>> for MltipleCommentResponse {
+    fn from(list: Vec<(Comment, Profile)>) -> Self {
+        Self { comments:  }
+        
+    }
+}
+
+
 
 #[derive(Serialize, Deserialize)]
 pub struct InnerComment {

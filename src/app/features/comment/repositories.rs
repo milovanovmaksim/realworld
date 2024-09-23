@@ -1,3 +1,5 @@
+use diesel::QueryDsl;
+
 use crate::{
     app::features::{
         article::entities::{Article, FetchBySlugAndAuthorId},
@@ -5,6 +7,7 @@ use crate::{
         user::entities::User,
     },
     error::AppError,
+    schema::{comments, users},
     utils::db::DbPool,
 };
 
@@ -17,6 +20,10 @@ pub trait CommentRepository: Send + Sync + 'static {
         article_title_slug: String,
         author: User,
     ) -> Result<(Comment, Profile), AppError>;
+    fn fetch_comments(
+        &self,
+        current_user: &Oprion<User>,
+    ) -> Result<Vec<(Commentm, Profile)>, AppError>;
 }
 
 #[derive(Clone)]
@@ -49,5 +56,23 @@ impl CommentRepository for CommentRepositoryImpl {
         )?;
         let profile = author.fetch_profile(conn, &author.id)?;
         Ok((comment, profile))
+    }
+    fn fetch_comments(
+        &self,
+        current_user: &Option<User>,
+    ) -> Result<Vec<(Comment, Profile)>, AppError> {
+        let conn = &mut self.pool.get()?;
+
+        let comments = comments::table
+            .inner_join(users::table)
+            .get_results::<(Comment, User)>(conn)?;
+        let comments = comments
+            .iter()
+            .map(|(comment, user)| {
+                let profile = user.to_profile(conn, current_user);
+                (comment, profile)
+            })
+            .collect::<Vec<(Comment, Profile)>>();
+        Ok(comments)
     }
 }
